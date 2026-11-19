@@ -1,170 +1,138 @@
 # Implementation-of-Logistic-Regression-Using-Gradient-Descent
-
-## AIM:
+# AIM:
 To write a program to implement the the Logistic Regression Using Gradient Descent.
 
-## Equipments Required:
-1. Hardware – PCs
-2. Anaconda – Python 3.7 Installation / Jupyter notebook
+# Equipments Required:
+1.Hardware – PCs
 
-## Algorithm
-1. 
-2. 
-3. 
-4. 
+2.Anaconda – Python 3.7 Installation / Jupyter notebook
 
-## Program:
+# Program:
 ```
 /*
 Program to implement the the Logistic Regression Using Gradient Descent.
 Developed by: Siddharth N N
-RegisterNumber:  212225240148
+RegisterNumber: 212225240148
 */
+
 import pandas as pd
-from sklearn.datasets import load_iris
-from sklearn.linear_model import SGDClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, confusion_matrix
-import matplotlib.pyplot as plt
-import seaborn as sns
-iris=load_iris()
-df=pd.DataFrame(data=iris.data, columns=iris.feature_names)
-df['target']=iris.target
-print(df.head())
-X = df.drop('target',axis=1)
-y=df['target']
-X_train, X_test, y_train, y_test = train_test_split(X,y, test_size=0.2, random_state=42)
-sgd_clf=SGDClassifier(max_iter=1000, tol=1e-3)
-sgd_clf.fit(X_train,y_train)
-y_pred=sgd_clf.predict(X_test)
-accuracy=accuracy_score(y_test,y_pred)
-print(f"Accuracy: {accuracy:.3f}")
-cm=confusion_matrix(y_test,y_pred)
-print("Confusion Matrix:")
-print(cm)
-plt.figure(figsize=(6,4))
-sns.heatmap(cm, annot=True, cmap="Blues", fmt='d', xticklabels=iris.target_names, yticklabels=iris.target_names)
-plt.xlabel("Predicted Label")
-plt.ylabel("True Label")
-plt.title("Confusion Matrix")
-plt.show()
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.datasets import load_breast_cancer
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import SGDClassifier
-from sklearn.metrics import (
-    accuracy_score, precision_score, recall_score, f1_score,
-    confusion_matrix, roc_curve, auc, ConfusionMatrixDisplay, RocCurveDisplay
-)
-from sklearn.calibration import CalibratedClassifierCV  # optional for probabilities
-import warnings
-warnings.filterwarnings("ignore")
-data = load_breast_cancer()
-X = pd.DataFrame(data.data, columns=data.feature_names)
-y = pd.Series(data.target)  # 0 = malignant, 1 = benign
-print("Dataset:", data.DESCR.splitlines()[0])
-print("X shape:", X.shape, "y shape:", y.shape)
-print()
-print("First 5 rows:")
-print(X.iloc[:, :6].head())
-feat1, feat2 = "mean radius", "mean texture"
-X_vis = X[[feat1, feat2]].values
 
-# Full features for model training
-X_full = X.values
-X_train, X_test, y_train, y_test = train_test_split(X_full, y, test_size=0.25, random_state=42, stratify=y)
-Xv_train, Xv_test, yv_train, yv_test = train_test_split(X_vis, y, test_size=0.25, random_state=42, stratify=y)  # for viz
-scaler = StandardScaler().fit(X_train)
-X_train_s = scaler.transform(X_train)
-X_test_s = scaler.transform(X_test)
+# 1. Load the Dataset
+data = pd.read_csv('Placement_Data.csv')
 
-scaler_vis = StandardScaler().fit(Xv_train)
-Xv_train_s = scaler_vis.transform(Xv_train)
-Xv_test_s = scaler_vis.transform(Xv_test)
-clf = SGDClassifier(
-    loss='log_loss',           
-    penalty='l2',
-    alpha=1e-4,
-    max_iter=1000,
-    tol=1e-4,
-    learning_rate='optimal',  # 'constant', 'invscaling', 'optimal'
-    random_state=42,
-    verbose=0
-)
+print("Original Data:")
+print(data.head())
 
-clf.fit(X_train_s, y_train)
+# 2. Drop Unnecessary Columns
+data = data.drop('sl_no', axis=1)
+data = data.drop('salary', axis=1)
 
-# SGDClassifier does not implement predict_proba by default.
-# We can wrap it with CalibratedClassifierCV if we need probabilities (for ROC).
-calibrated = CalibratedClassifierCV(clf, method="sigmoid", cv=5)
-calibrated.fit(X_train_s, y_train)
-y_pred = clf.predict(X_test_s)
-y_proba = calibrated.predict_proba(X_test_s)[:, 1]  # probability of class 1
+print("\nAfter dropping 'sl_no' and 'salary':")
+print(data.head())
 
-acc = accuracy_score(y_test, y_pred)
-prec = precision_score(y_test, y_pred)
-rec = recall_score(y_test, y_pred)
-f1 = f1_score(y_test, y_pred)
+# 3. Convert Categorical Columns to 'category' Type
+data["gender"] = data["gender"].astype('category')
+data["ssc_b"] = data["ssc_b"].astype('category')
+data["hsc_b"] = data["hsc_b"].astype('category')
+data["degree_t"] = data["degree_t"].astype('category')
+data["workex"] = data["workex"].astype('category')
+data["specialisation"] = data["specialisation"].astype('category')
+data["status"] = data["status"].astype('category')
+data["hsc_s"] = data["hsc_s"].astype('category')
 
-print("Test set metrics:")
-print(f"Accuracy:  {acc:.4f}")
-print(f"Precision: {prec:.4f}")
-print(f"Recall:    {rec:.4f}")
-print(f"F1-score:  {f1:.4f}")
-print()
-cv_scores = cross_val_score(clf, scaler.transform(X_full), y, cv=5, scoring='accuracy')
-print("5-fold CV accuracy: mean={:.4f} std={:.4f}".format(cv_scores.mean(), cv_scores.std()))
-print()
-cm = confusion_matrix(y_test, y_pred)
-disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=data.target_names)
-fig, ax = plt.subplots(figsize=(5,4))
-disp.plot(ax=ax)
-ax.set_title("Confusion Matrix (Test set)")
-plt.show()
-fpr, tpr, _ = roc_curve(y_test, y_proba)
-roc_auc = auc(fpr, tpr)
-fig, ax = plt.subplots(figsize=(6,5))
-RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=roc_auc, estimator_name="SGD Logistic (calibrated)").plot(ax=ax)
-ax.set_title(f"ROC Curve (AUC = {roc_auc:.3f})")
-plt.show()
-clf_vis = SGDClassifier(loss='log_loss', max_iter=1000, tol=1e-4, random_state=42)
-clf_vis.fit(Xv_train_s, yv_train)
+print("\nData types after converting to 'category':")
+print(data.dtypes)
 
-# Make mesh
-xx_min, xx_max = Xv_train_s[:, 0].min() - 1, Xv_train_s[:, 0].max() + 1
-yy_min, yy_max = Xv_train_s[:, 1].min() - 1, Xv_train_s[:, 1].max() + 1
-xx, yy = np.meshgrid(np.linspace(xx_min, xx_max, 300), np.linspace(yy_min, yy_max, 300))
-grid = np.c_[xx.ravel(), yy.ravel()]
+# 4. Convert Categories to Numeric Codes
+data["gender"] = data["gender"].cat.codes
+data["ssc_b"] = data["ssc_b"].cat.codes
+data["hsc_b"] = data["hsc_b"].cat.codes
+data["degree_t"] = data["degree_t"].cat.codes
+data["workex"] = data["workex"].cat.codes
+data["specialisation"] = data["specialisation"].cat.codes
+data["status"] = data["status"].cat.codes
+data["hsc_s"] = data["hsc_s"].cat.codes
 
-Z = clf_vis.predict(grid).reshape(xx.shape)
+print("\nData after converting categories to numeric codes:")
+print(data.head())
 
-fig, ax = plt.subplots(figsize=(7,6))
-ax.contourf(xx, yy, Z, alpha=0.2)
-# plot training points
-ax.scatter(Xv_train_s[:, 0][yv_train==0], Xv_train_s[:, 1][yv_train==0], marker='o', label=data.target_names[0], edgecolor='k')
-ax.scatter(Xv_train_s[:, 0][yv_train==1], Xv_train_s[:, 1][yv_train==1], marker='^', label=data.target_names[1], edgecolor='k')
-ax.set_xlabel(feat1 + " (scaled)")
-ax.set_ylabel(feat2 + " (scaled)")
-ax.set_title("Decision boundary (SGD Logistic) — trained on 2 features")
-ax.legend()
-plt.show()
+# 5. Separate Features (X) and Target (y)
+x = data.iloc[:, :-1].values   # all columns except last
+y = data.iloc[:, -1].values    # last column (status)
+
+print("\nFeature matrix X shape:", x.shape)
+print("Target vector y shape:", y.shape)
+
+# 6. Initialize Parameters
+theta = np.random.randn(x.shape[1])  # Random initial weights for each feature
+
+print("\nInitial theta (weights):")
+print(theta)
+
+# 7. Define Sigmoid Function
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+# 8. Define Loss Function (optional to print/check)
+def loss(theta, X, y):
+    h = sigmoid(X.dot(theta))
+    return -np.sum(y * np.log(h + 1e-10) + (1 - y) * np.log(1 - h + 1e-10))
+    # Added small 1e-10 to avoid log(0)
+
+# 9. Implement Gradient Descent
+def gradient_descent(theta, X, y, alpha, num_iterations):
+    m = len(y)
+    for i in range(num_iterations):
+        h = sigmoid(X.dot(theta))
+        gradient = X.T.dot(h - y) / m
+        theta -= alpha * gradient
+
+        # Optional: print loss every 100 iterations
+        if (i + 1) % 100 == 0:
+            current_loss = loss(theta, X, y)
+            print(f"Iteration {i+1}, Loss: {current_loss:.4f}")
+
+    return theta
+
+# 10. Train the Model
+theta = gradient_descent(theta, x, y, alpha=0.01, num_iterations=1000)
+
+print("\nFinal theta (weights) after training:")
+print(theta)
+
+# 11. Define Prediction Function
+def predict(theta, X):
+    h = sigmoid(X.dot(theta))
+    y_pred = np.where(h >= 0.5, 1, 0)
+    return y_pred
+
+# 12. Make Predictions and Compute Accuracy
+y_pred = predict(theta, x)
+accuracy = np.mean(y_pred.flatten() == y)
+
+print("\nTraining Accuracy:", accuracy)
+print("Predicted labels (first 20):")
+print(y_pred[:20])
+
+# 13. Predict for New Students
+# NOTE: The order of features must match 'x' columns exactly.
+# Example new students (values must match the encoded format used above)
+xnew1 = np.array([[0, 87, 0, 95, 0, 2, 78, 2, 0, 0, 1, 0]])
+xnew2 = np.array([[0, 0, 0, 0, 0, 2, 8, 2, 0, 0, 1, 0]])
+
+y_prednew1 = predict(theta, xnew1)
+y_prednew2 = predict(theta, xnew2)
+
+print("\nPrediction for new student 1 (0 = Not Placed, 1 = Placed):", y_prednew1[0])
+print("Prediction for new student 2 (0 = Not Placed, 1 = Placed):", y_prednew2[0])
+
 ```
-
 ## Output:
-<img width="936" height="402" alt="image" src="https://github.com/user-attachments/assets/23ffa69f-6f02-4278-b460-fa1ed743b0c4" />
-<img width="877" height="417" alt="image" src="https://github.com/user-attachments/assets/7aaed8e0-5a23-4ec3-88b8-23dea44d107b" />
-<img width="871" height="412" alt="image" src="https://github.com/user-attachments/assets/457481b7-0130-4ecd-9090-ee493483e3cd" />
-<img width="532" height="172" alt="image" src="https://github.com/user-attachments/assets/e29ea348-4c61-4a85-a9b0-fa74ba39585c" />
-<img width="822" height="590" alt="image" src="https://github.com/user-attachments/assets/ed61e1c0-1849-47e7-8b66-d31d6126515a" />
-<img width="762" height="367" alt="image" src="https://github.com/user-attachments/assets/ead4be1f-229e-4cf0-9d69-9c06fc45d9af" />
-<img width="810" height="420" alt="image" src="https://github.com/user-attachments/assets/87c75ae1-164c-4365-8d34-5a20467931a0" />
-<img width="1081" height="427" alt="image" src="https://github.com/user-attachments/assets/e5cc8839-5ffa-4cdc-bc08-c300d9eb00f8" />
+<img width="1218" height="631" alt="image" src="https://github.com/user-attachments/assets/b3a4b64f-3b9c-482d-9f72-996687572201" />
+<img width="1042" height="720" alt="image" src="https://github.com/user-attachments/assets/edd20220-1d75-4201-973e-acf6e82c1d68" />
+<img width="1185" height="536" alt="image" src="https://github.com/user-attachments/assets/64a017e6-0053-45ce-874b-57b64415757f" />
 
-
-
-## Result:
+# Result:
 Thus the program to implement the the Logistic Regression Using Gradient Descent is written and verified using python programming.
-
